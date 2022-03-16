@@ -225,26 +225,38 @@ def get_friends_followers_ids(twitter_api, screen_name=None, user_id=None,
 # print(friends_ids)
 # print(followers_ids)
 
-def crawl_followers(twitter_api, screen_name, limit=1000000, depth=2, **mongo_conn_kw):
+def crawl_followers(twitter_api, screen_name, limit=10, depth=2):
     
     # Resolve the ID for screen_name and start working with IDs for consistency 
     # in storage
 
+    #start with the first user
     seed_id = str(twitter_api.users.show(screen_name=screen_name)['id'])
+    print("seed id: ", seed_id)
     
-    _, next_queue = get_friends_followers_ids(twitter_api, user_id=seed_id, 
+    #get the first users friends and followers
+    friend_queue, follower_queue = get_friends_followers_ids(twitter_api, user_id=seed_id, 
                                               friends_limit=0, followers_limit=limit)
-
+    """
+    TODO: find the reciprocal friends, as done in a2 file cell 2
+    TODO: find the 5 most popular reciprocal friends, as done in a2 file
+    TODO: create networkx graph, and make the connections between reciprocal friends, and the user
+    TODO: calculate diameter of networkx graph
+    TODO: calculate average distance of networkx graph
+    """
     
     d = 1
+    print("entering loop...................")
     while d < depth:
         d += 1
-        (queue, next_queue) = (next_queue, [])
+        (queue, follower_queue) = (follower_queue, [])
         for fid in queue:
-            _, follower_ids = get_friends_followers_ids(twitter_api, user_id=fid, 
+            friend_ids, follower_ids = get_friends_followers_ids(twitter_api, user_id=fid, 
                                                      friends_limit=0, 
                                                      followers_limit=limit)
 
-            
-            next_queue += follower_ids
+            print("adding to follower queue........................")
+            follower_queue += follower_ids
+            print("len follower queue: ", len(follower_queue))
+            friend_queue += friend_ids
 
